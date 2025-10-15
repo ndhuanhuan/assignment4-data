@@ -86,3 +86,32 @@ def identify_language(text: str) -> Tuple[str, float]:
     mapped_language = language_mapping.get(language_code, language_code)
     
     return mapped_language, confidence
+
+
+def mask_emails(text: str) -> Tuple[str, int]:
+    """Mask email addresses in text with |||EMAIL_ADDRESS|||.
+    
+    Args:
+        text: Input string that may contain email addresses
+        
+    Returns:
+        A tuple containing:
+        - masked_text: String with email addresses replaced by |||EMAIL_ADDRESS|||
+        - count: Number of email addresses that were masked
+    """
+    # Regular expression for email addresses
+    # This pattern matches most common email formats including:
+    # - Standard emails: user@domain.com
+    # - Emails with dots, hyphens, underscores: user.name@sub-domain.co.uk
+    # - Emails with plus signs: user+tag@domain.com
+    # - Numeric domains: user@192.168.1.1
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+    
+    # Find all email addresses
+    emails = re.findall(email_pattern, text)
+    
+    # Replace each email with the mask string
+    masked_text = re.sub(email_pattern, '|||EMAIL_ADDRESS|||', text)
+    
+    # Return the masked text and count of emails found
+    return masked_text, len(emails)

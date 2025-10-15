@@ -12,7 +12,7 @@ def run_extract_text_from_html_bytes(html_bytes: bytes) -> str | None:
 
 
 def run_identify_language(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    return data_utils.identify_language(text)
 
 
 def run_mask_emails(text: str) -> tuple[str, int]:

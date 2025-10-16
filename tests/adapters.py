@@ -28,11 +28,11 @@ def run_mask_ips(text: str) -> tuple[str, int]:
 
 
 def run_classify_nsfw(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    return data_utils.classify_nsfw(text)
 
 
 def run_classify_toxic_speech(text: str) -> tuple[Any, float]:
-    raise NotImplementedError
+    return data_utils.classify_toxic_speech(text)
 
 
 def run_classify_quality(text: str) -> tuple[Any, float]:

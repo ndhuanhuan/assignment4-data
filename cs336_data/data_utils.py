@@ -216,3 +216,111 @@ def mask_ip_addresses(text: str) -> Tuple[str, int]:
     
     # Return the masked text and count of IP addresses found
     return masked_text, len(ip_addresses)
+
+
+def classify_nsfw(text: str) -> Tuple[str, float]:
+    """Classify text as NSFW or non-NSFW content using pre-trained FastText model.
+    
+    Args:
+        text: Input string to classify
+        
+    Returns:
+        A tuple containing:
+        - label: "nsfw" if content is NSFW, "non-nsfw" otherwise
+        - confidence: Float between 0 and 1 representing confidence in the prediction
+    """
+    import warnings
+    import urllib.request
+    import os
+    
+    # Suppress FastText warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        # Model paths - try local cluster path first, then download
+        cluster_model_path = '/data/classifiers/dolma_fasttext_nsfw_jigsaw_model.bin'
+        local_model_path = 'dolma_fasttext_nsfw_jigsaw_model.bin'
+        
+        # Try to load from cluster path first
+        if os.path.exists(cluster_model_path):
+            model = fasttext.load_model(cluster_model_path)
+        elif os.path.exists(local_model_path):
+            model = fasttext.load_model(local_model_path)
+        else:
+            # Download the model if not available
+            print("Downloading NSFW classification model...")
+            url = 'https://dolma-artifacts.org/fasttext_models/jigsaw_fasttext_bigrams_20230515/jigsaw_fasttext_bigrams_nsfw_final.bin'
+            urllib.request.urlretrieve(url, local_model_path)
+            model = fasttext.load_model(local_model_path)
+    
+    # Clean the text for classification
+    cleaned_text = re.sub(r'\s+', ' ', text.strip())
+    if len(cleaned_text.strip()) == 0:
+        return "non-nsfw", 0.8
+    
+    # Predict using the model
+    predictions = model.predict(cleaned_text, k=1)
+    
+    # Extract label and confidence
+    label = predictions[0][0].replace('__label__', '')
+    confidence = float(predictions[1][0])
+    
+    # Map model output to expected format
+    if label in ['nsfw', 'obscene', 'toxic', '1']:
+        return "nsfw", confidence
+    else:
+        return "non-nsfw", confidence
+
+
+def classify_toxic_speech(text: str) -> Tuple[str, float]:
+    """Classify text as toxic or non-toxic speech using pre-trained FastText model.
+    
+    Args:
+        text: Input string to classify
+        
+    Returns:
+        A tuple containing:
+        - label: "toxic" if speech is toxic, "non-toxic" otherwise
+        - confidence: Float between 0 and 1 representing confidence in the prediction
+    """
+    import warnings
+    import urllib.request
+    import os
+    
+    # Suppress FastText warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        # Model paths - try local cluster path first, then download
+        cluster_model_path = '/data/classifiers/dolma_fasttext_hatespeech_jigsaw_model.bin'
+        local_model_path = 'dolma_fasttext_hatespeech_jigsaw_model.bin'
+        
+        # Try to load from cluster path first
+        if os.path.exists(cluster_model_path):
+            model = fasttext.load_model(cluster_model_path)
+        elif os.path.exists(local_model_path):
+            model = fasttext.load_model(local_model_path)
+        else:
+            # Download the model if not available
+            print("Downloading hate speech classification model...")
+            url = 'https://dolma-artifacts.org/fasttext_models/jigsaw_fasttext_bigrams_20230515/jigsaw_fasttext_bigrams_hatespeech_final.bin'
+            urllib.request.urlretrieve(url, local_model_path)
+            model = fasttext.load_model(local_model_path)
+    
+    # Clean the text for classification
+    cleaned_text = re.sub(r'\s+', ' ', text.strip())
+    if len(cleaned_text.strip()) == 0:
+        return "non-toxic", 0.8
+    
+    # Predict using the model
+    predictions = model.predict(cleaned_text, k=1)
+    
+    # Extract label and confidence
+    label = predictions[0][0].replace('__label__', '')
+    confidence = float(predictions[1][0])
+    
+    # Map model output to expected format
+    if label in ['toxic', 'hate', 'hatespeech', '1']:
+        return "toxic", confidence
+    else:
+        return "non-toxic", confidence

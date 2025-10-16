@@ -324,3 +324,49 @@ def classify_toxic_speech(text: str) -> Tuple[str, float]:
         return "toxic", confidence
     else:
         return "non-toxic", confidence
+
+
+def gopher_quality_filter(text: str) -> bool:
+    """Apply Gopher quality filters to determine if text passes quality criteria.
+    
+    Based on the Gopher paper [Rae et al., 2021], this function implements quality filters
+    that remove documents failing any of these criteria:
+    - Contains less than 50 or more than 100,000 words
+    - Have a mean word length outside the range of 3 to 10 characters
+    - Have more than 30% of lines ending with an ellipsis ("...")
+    - Contain less than 80% of words with at least one alphabetic character
+    
+    Args:
+        text: Input string to evaluate
+        
+    Returns:
+        bool: True if text passes all quality filters, False otherwise
+    """
+    import nltk
+    
+    # Ensure required NLTK data is available
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt')
+    
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        nltk.download('punkt_tab')
+    
+    words = nltk.word_tokenize(text)
+    if len(words) < 50 or len(words) > 100_000:
+        return False
+    mean_word_length = sum(len(word) for word in words) / len(words)
+    if mean_word_length < 3 or mean_word_length > 10:
+        return False
+    lines = text.split("\n")
+    if sum(line.endswith("...") for line in lines) / len(lines) > 0.3:
+        return False
+    if (
+        sum(re.search(r"[a-zA-Z]", word) is not None for word in words) / len(words)
+        < 0.8
+    ):
+        return False
+    return True

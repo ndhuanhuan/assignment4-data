@@ -6,3 +6,4 @@
 - uv run pytest -k test_mask_ips
 - uv run pytest -k test_classify_nsfw
 - uv run pytest -k test_classify_toxic_speech
+- uv run pytest -k test_gopher

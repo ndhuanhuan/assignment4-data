@@ -514,3 +514,38 @@ def _rule_based_quality_classifier(text: str) -> Tuple[str, float]:
         return "wiki", score
     else:
         return "cc", 1.0 - score
+
+
+def exact_line_deduplication(paths: list, output_dir) -> None:
+    """Perform exact line deduplication across multiple files.
+    
+    This function counts the frequency of each line across all input files,
+    then rewrites each file to the output directory keeping only lines that
+    appear exactly once in the entire corpus.
+    
+    Args:
+        paths: List of paths to input files to deduplicate
+        output_dir: Path to directory where deduplicated files will be written
+        
+    Returns:
+        None
+    """
+    import collections
+    import os
+    
+    os.makedirs(output_dir, exist_ok=True)
+    
+    counts = collections.Counter()
+    for path in paths:
+        with open(path, "r") as f:
+            for line in f.readlines():
+                counts[hash(line)] += 1
+    for path in paths:
+        with open(path, "r") as f:
+            lines = f.readlines()
+            new_lines = []
+            for line in lines:
+                if counts[hash(line)] == 1:
+                    new_lines.append(line)
+        with open(os.path.join(output_dir, os.path.basename(path)), "w") as f:
+            f.writelines(new_lines)

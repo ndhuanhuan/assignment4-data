@@ -4,6 +4,7 @@ import os
 from typing import Any
 
 from cs336_data import data_utils
+from cs336_data.minhash_dedup import *
 
 
 
@@ -57,4 +58,4 @@ def run_minhash_deduplication(
     jaccard_threshold: float,
     output_directory: os.PathLike,
 ):
-    raise NotImplementedError
+    minhash_dedupe(input_files, num_hashes, num_bands, ngrams, jaccard_threshold, output_directory)

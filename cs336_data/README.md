@@ -7,3 +7,7 @@
 - uv run pytest -k test_classify_nsfw
 - uv run pytest -k test_classify_toxic_speech
 - uv run pytest -k test_gopher
+- uv run pytest -k test_classify_quality
+- uv run pytest -k test_exact_line_deduplication
+- uv run pytest -k test_minhash_deduplication
+- uv run pytest -k test_minhash_deduplication.

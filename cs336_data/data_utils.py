@@ -2,7 +2,16 @@ from resiliparse.extract.html2text import extract_plain_text
 from resiliparse.parse.encoding import detect_encoding
 import fasttext
 import re
+import string
 from typing import Tuple
+import collections
+import os
+import random
+import unicodedata
+import nltk
+import hashlib
+import numpy as np
+
 
 
 def extract_text(html_bytes: bytes) -> str:

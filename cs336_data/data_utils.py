@@ -179,3 +179,40 @@ def mask_phone_numbers(text: str) -> Tuple[str, int]:
     masked_text = re.sub(combined_pattern, '|||PHONE_NUMBER|||', text)
     
     return masked_text, count
+
+
+def mask_ip_addresses(text: str) -> Tuple[str, int]:
+    """Mask IPv4 addresses in text with |||IP_ADDRESS|||.
+    
+    Args:
+        text: Input string that may contain IPv4 addresses
+        
+    Returns:
+        A tuple containing:
+        - masked_text: String with IPv4 addresses replaced by |||IP_ADDRESS|||
+        - count: Number of IPv4 addresses that were masked
+    """
+    # Regular expression for IPv4 addresses
+    # This pattern matches valid IPv4 addresses where each octet is 0-255
+    # We use word boundaries to ensure we match complete IP addresses
+    # Pattern explanation:
+    # - \b: word boundary at start
+    # - (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?): matches 0-255
+    #   - 25[0-5]: 250-255
+    #   - 2[0-4][0-9]: 200-249  
+    #   - [01]?[0-9][0-9]?: 0-199 (including single digits)
+    # - \.: literal dot
+    # - {3}: repeat the octet+dot pattern 3 times
+    # - (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?): final octet (0-255)
+    # - \b: word boundary at end
+    
+    ipv4_pattern = r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+    
+    # Find all IPv4 addresses
+    ip_addresses = re.findall(ipv4_pattern, text)
+    
+    # Replace each IP address with the mask string
+    masked_text = re.sub(ipv4_pattern, '|||IP_ADDRESS|||', text)
+    
+    # Return the masked text and count of IP addresses found
+    return masked_text, len(ip_addresses)

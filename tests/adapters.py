@@ -24,7 +24,7 @@ def run_mask_phone_numbers(text: str) -> tuple[str, int]:
 
 
 def run_mask_ips(text: str) -> tuple[str, int]:
-    raise NotImplementedError
+    return data_utils.mask_ip_addresses(text)
 
 
 def run_classify_nsfw(text: str) -> tuple[Any, float]:

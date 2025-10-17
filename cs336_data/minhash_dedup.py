@@ -11,6 +11,31 @@
 # - Jaccard Similarity: Measures overlap between document n-gram sets
 #
 # Reference: https://github.com/heng380/assignment4-data/blob/main/cs336_data/deduplication/minhash_dedup.py
+# 先切词， 切完类似于一个sliding window生成的n-gram set， 然后对每个n-gram set生成minhash签名，这里哈希用的是MurmurHash3
+# 哈希函数在变化时， 通过异或不同的seed来模拟不同的哈希函数。最后生成的minhash签名是一个长度为num_hashes的整数列表，里面存储了每个n-gram的最小哈希值
+# 这里的permutations其实就是不同的seed，相当于不同的哈希函数被调用
+# 然后用LSH把签名分成bands， 在每个band里相同的就是candidate pairs， 然后对candidate pairs计算jaccard similarity
+# 最后保留相似度高于阈值的文档
+
+# LSH
+# Step 1: 首先将D1, D2, ..., Dn的MinHash签名分成n个r维的签名（k=n*r）
+# 假如有12个元素组成签名，拆成3个band，每个band包含4个元素
+
+# Step 2： 对每个band计算一个哈希值，将band映射到一个桶中。如果两个文档在同一个位置上的band完全相同，那么会放到同一个桶里
+# D1： bucket1, bucket43, bucket87
+# D2： bucket1, bucket245, bucket845
+# D3： bucket221, bucket345, bucket982
+
+# Step 3： 任何落在同一个桶中的文档对都被认为是候选重复对
+# bucket1: (D1, D2)
+# bucket43: (D1)
+# bucket87: (D1)
+# bucket245: (D2)
+# bucket845: (D2)
+# bucket221: (D3)
+
+# Step 4： 对每个候选对计算实际的Jaccard相似度，只有那些相似度高于预设阈值的对才被认为是真正的重复
+# 以上例子中，我们如果对D1和D2, D2和D3两两计算相似度，需要计算3次。但是LSH只需要计算1次（D1和D2），大大减少了计算量。
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
@@ -222,7 +247,7 @@ def collect_signatures(
     return signatures
 
 
-def build_ngram_set(path: os.PathLike, *, ngrams: int):
+def build_ngram_set(path: os.PathLike, *, ngrams: int) -> tuple[os.PathLike, set[str]]:
     """Compute and return the normalized n-gram set for a single file.
     
     This is a helper function for parallel processing that combines
@@ -244,7 +269,7 @@ def collect_ngram_sets(
     *,
     ngrams: int,
     progress: bool = False,
-):
+) -> dict[os.PathLike, set[str]]:
     """Compute n-gram sets for multiple documents in parallel.
     
     This function is used during the candidate pair verification phase
